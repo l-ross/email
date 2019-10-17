@@ -1,6 +1,7 @@
 package email
 
 import (
+	"strings"
 	"testing"
 
 	"bytes"
@@ -431,33 +432,25 @@ Content-Type: multipart/mixed;
  boundary=35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 To: Jordan Wright <jmwright798@gmail.com>
 Subject: Test Subject
-
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 Content-Type: multipart/alternative;
  boundary=b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
-
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-
 Simple text body
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/html; charset=UTF-8
-
 <div dir=3D"ltr">Simple HTML body</div>
-
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c--
-
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 Content-Disposition: attachment;
  filename="cat.jpeg"
 Content-Id: <cat.jpeg>
 Content-Transfer-Encoding: base64
 Content-Type: image/jpeg
-
 TGV0J3MganVzdCBwcmV0ZW5kIHRoaXMgaXMgcmF3IEpQRUcgZGF0YS4=
-
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7--`)
 	e, err := NewEmailFromReader(bytes.NewReader(raw))
 	if err != nil {
@@ -483,6 +476,40 @@ TGV0J3MganVzdCBwcmV0ZW5kIHRoaXMgaXMgcmF3IEpQRUcgZGF0YS4=
 	}
 	if !bytes.Equal(e.Attachments[0].Content, a.Content) {
 		t.Fatalf("Incorrect attachment content %#q != %#q", e.Attachments[0].Content, a.Content)
+	}
+}
+
+func TestLongWhitespaceBodyEmailFromReader(t *testing.T) {
+	ex := &Email{
+		Subject: "Test Subject",
+		To:      []string{"Jordan Wright <jmwright798@gmail.com>"},
+		From:    "Jordan Wright <jmwright798@gmail.com>",
+		HTML:    []byte("<div dir=\"ltr\">This is a test email with <b>HTML Formatting.</b>\u00a0It also has very long lines so that the content must be wrapped if using quoted-printable decoding.</div>\r\n"),
+	}
+	// Create large text body consisting only of spaces.
+	// Body is larger than the default buffer size of 4096 ensuring that
+	// a Read will start with spaces at the start of the buffer.
+	textLen := 5100
+	ex.Text = []byte(strings.Repeat(" ", textLen))
+	raw, err := ex.Bytes()
+	if err != nil {
+		t.Fatalf("Error creating email bytes %s", err.Error())
+	}
+	e, err := NewEmailFromReader(bytes.NewReader(raw))
+	if err != nil {
+		t.Fatalf("Error creating email %s", err.Error())
+	}
+	if e.Subject != ex.Subject {
+		t.Fatalf("Incorrect subject. %#q != %#q", e.Subject, ex.Subject)
+	}
+	if !bytes.Equal(e.Text, ex.Text) {
+		t.Fatalf("Incorrect text: %#q != %#q", e.Text, ex.Text)
+	}
+	if !bytes.Equal(e.HTML, ex.HTML) {
+		t.Fatalf("Incorrect HTML: %#q != %#q", e.HTML, ex.HTML)
+	}
+	if e.From != ex.From {
+		t.Fatalf("Incorrect \"From\": %#q != %#q", e.From, ex.From)
 	}
 }
 
