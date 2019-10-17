@@ -432,25 +432,33 @@ Content-Type: multipart/mixed;
  boundary=35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 To: Jordan Wright <jmwright798@gmail.com>
 Subject: Test Subject
+
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 Content-Type: multipart/alternative;
  boundary=b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
+
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
+
 Simple text body
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/html; charset=UTF-8
+
 <div dir=3D"ltr">Simple HTML body</div>
+
 --b10ca5b1072908cceb667e8968d3af04503b7ab07d61c9f579c15b416d7c--
+
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7
 Content-Disposition: attachment;
  filename="cat.jpeg"
 Content-Id: <cat.jpeg>
 Content-Transfer-Encoding: base64
 Content-Type: image/jpeg
+
 TGV0J3MganVzdCBwcmV0ZW5kIHRoaXMgaXMgcmF3IEpQRUcgZGF0YS4=
+
 --35d10c2224bd787fe700c2c6f4769ddc936eb8a0b58e9c8717e406c5abb7--`)
 	e, err := NewEmailFromReader(bytes.NewReader(raw))
 	if err != nil {
